@@ -1,0 +1,8 @@
+streamlit
+Pillow
+pandas
+gradio
+openai
+gpt_index
+streamlit-chat 
+streamlit_option_menu

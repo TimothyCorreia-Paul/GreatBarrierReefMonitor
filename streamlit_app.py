@@ -2,8 +2,70 @@
 import streamlit as st
 import datetime
 from streamlit_option_menu import option_menu
+from streamlit_chat import message
 from PIL import Image
 import pandas as pd
+import openai
+import os
+
+def chatbot_page():
+    def predict(message_history):
+        # tokenize the new input sentence
+        # message_history.append({"role": "user", "content": f"{input}"})
+
+        completion = openai.ChatCompletion.create(
+        model="gpt-4", #10x cheaper than davinci, and better. $0.002 per 1k tokens
+        messages=message_history
+        )
+        reply_content = completion['choices'][0]['message']['content']
+        # message_history.append({"role": "assistant", "content": f"{reply_content}"}) 
+        
+        # return message_history, reply_content
+        return message_history, reply_content
+    
+    st.title(f"You have selected {selected}")
+    st.title("GPT4 Assistant 🤖 Ask Me Anything!")
+
+    # message_history = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
+
+    if 'generated' not in st.session_state:
+        st.session_state['generated'] = []
+
+    if 'past' not in st.session_state:
+        st.session_state['past'] = []
+    
+    if 'message_history' not in st.session_state:
+        st.session_state['message_history'] = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
+
+    # user_input = st.text_input("Ask a question!", key="input")
+
+    def get_text():
+        input_text = st.text_input("Type here...", key="input")
+        return input_text 
+
+    user_input = get_text()
+
+    # message_history = message_history.append({"role": "user", "content": user_input})
+
+    if user_input:
+        st.session_state.message_history.append({"role": "user", "content": user_input})
+        message_history = st.session_state.message_history
+        message_history, reply_content = predict(message_history)
+        st.write(st.session_state.message_history)
+        st.session_state.message_history.append({"role": "assistant", "content": reply_content})
+        st.session_state.past.append(user_input)
+        st.session_state.generated.append(reply_content)
+
+    if st.session_state['generated']:
+        for i in range(len(st.session_state.message_history)-1, 0, -1):
+            message(st.session_state.message_history[i]['choices'][0]['message']['content'], key=str(i))
+            message(st.session_state.message_history[i-1]['choices'][0]['message']['content'], is_user=True, key=str(i) + '_user')
+
+        # for i in range(len(st.session_state['generated'])-1, -1, -1):
+        #     message(st.session_state["generated"][i], key=str(i))
+        #     message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+
+
 
 # Header creation & page configuration
 st.set_page_config(page_title="FIT3164 Coral Reef", page_icon=":ocean:")
@@ -26,13 +88,17 @@ selected = option_menu(
     orientation="horizontal",
 )
 
+# Setting up the GPT4 chatbot
+os.environ["OPENAI_API_KEY"] = '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'
+message_history = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
+
 # Home Page
 if selected == "Home":
     st.title(f"You have selected {selected}")
 
 # Chatbot Page
 elif selected == "Chatbot":
-    st.title(f"You have selected {selected}")
+    chatbot_page()
 
 # About Us Page
 elif selected == "About Us":
@@ -107,9 +173,9 @@ elif selected == "Contact Us":
         # When the submit button is pressed, write the input into csv file
         if submit == True:
             inputs = {'subject': [subject_input],
-                  'email': [email_input],
-                  'name': [name_input],
-                  'details': [details_input]                
+                'email': [email_input],
+                'name': [name_input],
+                'details': [details_input]                
             }
             df = df.append(inputs, ignore_index = True)
             open('df.csv','w').write(df.to_csv())
