@@ -51,15 +51,18 @@ def chatbot_page():
         st.session_state.message_history.append({"role": "user", "content": user_input})
         message_history = st.session_state.message_history
         message_history, reply_content = predict(message_history)
-        st.write(st.session_state.message_history)
+        # st.write(st.session_state.message_history)
         st.session_state.message_history.append({"role": "assistant", "content": reply_content})
         st.session_state.past.append(user_input)
         st.session_state.generated.append(reply_content)
 
     if st.session_state['generated']:
-        for i in range(len(st.session_state.message_history)-1, 0, -1):
-            message(st.session_state.message_history[i]['choices'][0]['message']['content'], key=str(i))
-            message(st.session_state.message_history[i-1]['choices'][0]['message']['content'], is_user=True, key=str(i) + '_user')
+        for i in range(len(st.session_state.message_history)-1, 0, -2):
+            # message(st.session_state.message_history[i]['choices'][0]['message']['content'], key=str(i))
+            # message(st.session_state.message_history[i-1]['choices'][0]['message']['content'], is_user=True, key=str(i) + '_user')
+            message(st.session_state.message_history[i]['content'], key=str(i))
+            message(st.session_state.message_history[i-1]['content'], is_user=True, key=str(i) + '_user')
+        st.write(st.session_state.message_history)
 
         # for i in range(len(st.session_state['generated'])-1, -1, -1):
         #     message(st.session_state["generated"][i], key=str(i))
