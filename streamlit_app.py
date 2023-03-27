@@ -7,6 +7,7 @@ from PIL import Image
 import pandas as pd
 import openai
 import os
+import re
 
 def chatbot_page():
     def predict(message_history):
@@ -23,7 +24,6 @@ def chatbot_page():
         # return message_history, reply_content
         return message_history, reply_content
     
-    st.title(f"You have selected {selected}")
     st.title("GPT4 Assistant 🤖 Ask Me Anything!")
 
     # message_history = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
@@ -76,9 +76,6 @@ header = st.container()
 with header:
     st.title('Monitoring Health of Coral Reef')
 
-#Image Assignment
-khai = Image.open("khai.png")
-
 today = datetime.date.today()
 year = today.year
 
@@ -97,7 +94,11 @@ message_history = [{"role": "system", "content": "You are a helpful assistant. Y
 
 # Home Page
 if selected == "Home":
-    st.title(f"You have selected {selected}")
+    tableau_public_embed_code = """
+    <div class='tableauPlaceholder' id='viz1679884696848' style='position: relative'><noscript><a href='#'><img alt='Sheet 1 ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Co&#47;Coralmap&#47;Sheet1&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='Coralmap&#47;Sheet1' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Co&#47;Coralmap&#47;Sheet1&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='en-US' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1679884696848');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='1000px';vizElement.style.height='1000px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+    """
+
+    st.components.v1.html(tableau_public_embed_code, width=1000, height=1000)
 
 # Chatbot Page
 elif selected == "Chatbot":
@@ -107,80 +108,83 @@ elif selected == "Chatbot":
 elif selected == "About Us":
     st.title(f"About Us")
     st.markdown('<div style="text-align: justify;">We are a group of final year university student studying Bachelors of Computer Science majoring in data science. This is our final year group project and the aim of this website is to create a platform for people to view the health of coral reefs to raise awareness about the endangered species of coral reef.</div>', unsafe_allow_html=True)
-    
+    st.write('')
+    st.write('')
+
+    st.subheader('Team Members')
+
+    col1, col2 = st.columns([10,10])
     # Details for Khai Yung
-    kycol1, kymid, kycol2 = st.columns([10,1,20])
-    with kycol1:
-        st.write('')
-        st.image(khai, caption="Khai Yung")
-    with kycol2:
-        st.write('')
-        st.write('')
+    with col1:
         st.write('Name: Khai Yung Lau')
         st.write('Age: ' + str(year - 2003))
-        st.write('Role: Front End Developer')
-        st.write('Phone Number: +61468632814')
-        st.write('Email: khaiyunglau@gmail.com')
+        st.write('Email: klau0021@student.monash.edu')
+        st.write('Nationality: Malaysian')
 
     # Details for Tim
-    timcol1, timmid, timcol2 = st.columns([10,1,20])
-    with timcol1:
-        st.image(khai, caption="Timothy")
-    with timcol2:
-        st.write('')
-        st.write('Name: Timothy')
-        st.write('Age: ' + str(year - 2001))
-        st.write('Role: ')
-        st.write('Phone Number: ')
-        st.write('Email: ')
+    with col2:
+        st.write('Name: Timothy Correia-Paul')
+        st.write('Age: ' + str(year - 2000))
+        st.write('Email: tcor0005@student.monash.edu')
+        st.write('Nationality: Australian')
 
     # Details for ZhouZhou
-    zhoucol1, zhoumid, zhoucol2 = st.columns([10,1,20])
-    with zhoucol1:
-        st.image(khai, caption="Zhou Zhou")
-    with zhoucol2:
+    with col1:
         st.write('')
-        st.write('Name: Zhou')
-        st.write('Age: ' + str(year - 2002))
-        st.write('Role: ')
-        st.write('Phone Number: ')
-        st.write('Email: ')
+        st.write('')
+        st.write('Name: Zhou Zhou')
+        st.write('Age: ' + str(year - 2001))
+        st.write('Email: zzhou0044@student.monash.edu')
+        st.write('Nationality: Chinese')
 
     # Details for JingSeng
-    jscol1, jsmid, jscol2 = st.columns([10,1,20])
-    with jscol1:
-        st.image(khai, caption="Jing Seng")
-    with jscol2:
+    with col2:
+        st.write('')
         st.write('')
         st.write('Name: Jing Seng Sin')
         st.write('Age: ' + str(year - 2001))
-        st.write('Role: ')
-        st.write('Phone Number: +61481169265')
-        st.write('Email: ')
+        st.write('Email: jsin0036@student.monash.edu')
+        st.write('Nationality: Malaysian')
 
+    st.subheader('Supervisor from Monash University')
+    st.write('Name: Daniel Jitnah')
+    st.write('Email: daniel.jitnah@monash.edu')
+    st.write('Name: Varun Mathur')
+    st.write('Email: varun.mathur@monash.edu')
+    st.write('Name: Bhanuka Gamage')
+    st.write('Email: bhanuka.gamage@monash.edu')
+    
 # Contact Us Page
 elif selected == "Contact Us":
     st.markdown('<h1 style="text-align: center;">Contact Us</h1>',unsafe_allow_html=True)
 
-    # Form to reach out to the team
-    with st.form("contact_form", clear_on_submit=True):    
-        subject_input = st.text_input('Subject: ')
-        email_input = st.text_input('Your Email Address: ')
-        name_input = st.text_input('Your Name: ')
-        details_input = st.text_area('Details: ')
+    #Validation check for email address
+    try:
+        with st.form("contact_form", clear_on_submit=True):
+            subject_input = st.text_input('Subject: ')
+            email_input = st.text_input('Your Email Address: ')
+            name_input = st.text_input('Your Name: ')
+            details_input = st.text_area('Details: ')
 
-        submit = st.form_submit_button("Submit")
+            submit = st.form_submit_button("Submit")
 
+            if check(email_input) == True:
+                pass
+            elif check(email_input) == False:
+                submit = False
+                st.error("Please enter a valid Email address")
+    except:
+        print("invalid email address")
+    else:
         df = pd.read_csv('df.csv')
-
         # When the submit button is pressed, write the input into csv file
         if submit == True:
             inputs = {'subject': [subject_input],
                 'email': [email_input],
                 'name': [name_input],
-                'details': [details_input]                
+                'details': [details_input]           
             }
             df = df.append(inputs, ignore_index = True)
             open('df.csv','w').write(df.to_csv())
-            # Respond to the button click 
+            # Respond to the button click
             st.write("Thank you for contacting us, we will reply to your message as soon as possible!")
