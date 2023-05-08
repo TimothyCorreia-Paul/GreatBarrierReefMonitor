@@ -9,24 +9,25 @@ import openai
 import os
 import re
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+
 def chatbot_page():
     def predict(message_history):
         # tokenize the new input sentence
         # message_history.append({"role": "user", "content": f"{input}"})
 
         completion = openai.ChatCompletion.create(
-        model="gpt-4", #10x cheaper than davinci, and better. $0.002 per 1k tokens
+        model="gpt-3.5-turbo", #10x cheaper than davinci, and better. $0.002 per 1k tokens
         messages=message_history
         )
         reply_content = completion['choices'][0]['message']['content']
         # message_history.append({"role": "assistant", "content": f"{reply_content}"}) 
         
         # return message_history, reply_content
-        return message_history, reply_content
+        return reply_content
     
     st.title("GPT4 Assistant 🤖 Ask Me Anything!")
-
-    # message_history = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
 
     if 'generated' not in st.session_state:
         st.session_state['generated'] = []
@@ -34,10 +35,14 @@ def chatbot_page():
     if 'past' not in st.session_state:
         st.session_state['past'] = []
     
+    if 'generated_message' not in st.session_state:
+        st.session_state['generated_message'] = ""
+    
     if 'message_history' not in st.session_state:
-        st.session_state['message_history'] = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
+        st.session_state['message_history'] = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input. Keep the conversation topical to marine ecosystems, and do not stray from the topic. If asked irrelevant questions, you can reply with 'I don't know' or 'I don't want to answer that'."}]
 
-    # user_input = st.text_input("Ask a question!", key="input")
+    user_icon = Image.open('usericon.png')
+    openai_icon = Image.open('openaiicon2.png')
 
     def get_text():
         input_text = st.text_input("Type here...", key="input")
@@ -45,33 +50,80 @@ def chatbot_page():
 
     user_input = get_text()
 
-    # message_history = message_history.append({"role": "user", "content": user_input})
+    st.divider()
+
+    completion_text = ''
+
+    # placeholder_container = st.container()
+    pcol1, pcol2 = st.columns([1, 10])
+    pcol1.image(openai_icon, width=50)
+    plcol2_text = pcol2.empty()
+
+    conversation_history = st.container()
+
+    # if user_input:
+    #     st.session_state.message_history.append({"role": "user", "content": user_input})
+    #     message_history = st.session_state.message_history
+    #     reply_content = predict(message_history)
+
+    #     st.session_state.message_history.append({"role": "assistant", "content": reply_content})
+    #     st.session_state.past.append(user_input)
+    #     st.session_state.generated.append(reply_content)
+
+    # message(st.session_state.message_history[i]['content'], key="streaming_response")
+    # if st.session_state['generated']:
+    #     for i in range(len(st.session_state.message_history)-1, 0, -2):
+    #         message(st.session_state.message_history[i]['content'], key=str(i))
+    #         message(st.session_state.message_history[i-1]['content'], is_user=True, key=str(i) + '_user')
+    #     st.write(st.session_state.message_history)
 
     if user_input:
+        pcol2.empty()
         st.session_state.message_history.append({"role": "user", "content": user_input})
-        message_history = st.session_state.message_history
-        message_history, reply_content = predict(message_history)
+        # st.session_state.message_history.append({"role": "user", "content": ""})
+
+        with conversation_history:
+            st.divider()
+            for i in range(len(st.session_state.message_history)-1, 0, -2):
+                col1, col2 = st.columns([1, 10])
+                # col1.markdown("**User:**")
+                col1.image(user_icon, width=50)
+                col2.markdown(st.session_state.message_history[i]['content'])
+                st.divider()
+                if i == 1:
+                    break
+                col3, col4 = st.columns([1, 10])
+                # col3.markdown("**AI:**")
+                col3.image(openai_icon, width=50)
+                col4.markdown(st.session_state.message_history[i-1]['content'])
+                st.divider()
+        
+            # Call OpenAI API with message history
+            message_history = st.session_state.message_history
+            completion = openai.ChatCompletion.create(
+            model="gpt-4", #10x cheaper than davinci, and better. $0.002 per 1k tokens
+            messages=message_history,
+            stream=True
+            )
+
+            with pcol2:
+                # plcol2_text.markdown("Waiting for a response...")
+                plcol2_text = pcol2.empty()
+                for chunk in completion:
+                    chunk_message = chunk['choices'][0]['delta']
+                    keys = chunk_message.keys()
+                    if 'content' in keys:
+                        completion_text += chunk_message['content']
+                        # placeholder_response.markdown(completion_text)
+                        plcol2_text.markdown(completion_text)
+                        st.session_state.message_history.pop()
+                        st.session_state.message_history.append({"role": "assistant", "content": completion_text})
+                
+
         # st.write(st.session_state.message_history)
-        st.session_state.message_history.append({"role": "assistant", "content": reply_content})
-        st.session_state.past.append(user_input)
-        st.session_state.generated.append(reply_content)
-
-    if st.session_state['generated']:
-        for i in range(len(st.session_state.message_history)-1, 0, -2):
-            # message(st.session_state.message_history[i]['choices'][0]['message']['content'], key=str(i))
-            # message(st.session_state.message_history[i-1]['choices'][0]['message']['content'], is_user=True, key=str(i) + '_user')
-            message(st.session_state.message_history[i]['content'], key=str(i))
-            message(st.session_state.message_history[i-1]['content'], is_user=True, key=str(i) + '_user')
-        st.write(st.session_state.message_history)
-
-        # for i in range(len(st.session_state['generated'])-1, -1, -1):
-        #     message(st.session_state["generated"][i], key=str(i))
-        #     message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
-
-
 
 # Header creation & page configuration
-st.set_page_config(page_title="FIT3164 Coral Reef", page_icon=":ocean:")
+st.set_page_config(page_title="FIT3164 Coral Reef Monitor", page_icon=":ocean:")
 header = st.container()
 with header:
     st.title('Monitoring Health of Coral Reef')
@@ -89,8 +141,7 @@ selected = option_menu(
 )
 
 # Setting up the GPT4 chatbot
-os.environ["OPENAI_API_KEY"] = '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'
-message_history = [{"role": "system", "content": "You are a helpful assistant. You are an expert in the subject matter of the conversation, namely all matters relating to marine ecosystems around the world. I will specify the subject matter in my messages, and you will reply with a helpful answer that includes the subjects I mention in my messages. Reply only with helpful answers to further input."}]
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 # Home Page
 if selected == "Home":
@@ -124,7 +175,7 @@ elif selected == "About Us":
     # Details for Tim
     with col2:
         st.write('Name: Timothy Correia-Paul')
-        st.write('Age: ' + str(year - 2000))
+        st.write('Age: ' + str(year - 1996))
         st.write('Email: tcor0005@student.monash.edu')
         st.write('Nationality: Australian')
 
