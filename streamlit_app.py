@@ -3,6 +3,7 @@ import streamlit as st
 import datetime
 from streamlit_option_menu import option_menu
 from streamlit_chat import message
+import streamlit.components.v1 as components
 from PIL import Image
 import pandas as pd
 import openai
