@@ -206,15 +206,4 @@ elif selected == "Contact Us":
         print("invalid email address")
     else:
         components.iframe("https://forms.gle/59qGsStUHvijaPwZ9", height = 1100)
-        #df = pd.read_csv('df.csv')
-        # When the submit button is pressed, write the input into csv file
-        #if submit == True:
-        #    inputs = {'subject': [subject_input],
-        #        'email': [email_input],
-        #        'name': [name_input],
-        #        'details': [details_input]           
-        #    }
-        #    df = df.append(inputs, ignore_index = True)
-        #    open('df.csv','w').write(df.to_csv())
-            # Respond to the button click
-        #    st.write("Thank you for contacting us, we will reply to your message as soon as possible!")
+       
