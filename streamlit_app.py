@@ -128,6 +128,9 @@ if selected == "Home":
 
     st.components.v1.html(tableau_public_embed_code, width=1000, height=1000)
 
+    df = pd.read_csv("Inner.csv")
+    st.map(df)
+
 # Chatbot Page
 elif selected == "Chatbot":
     chatbot_page()
