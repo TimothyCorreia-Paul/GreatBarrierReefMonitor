@@ -1,0 +1,182 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+install.packages("mice")
+library(mice, warn.conflicts = FALSE)
+```
+
+```{r}
+df = read.csv("ExtendedData.csv")
+# show the missing data pattern
+md.pattern(nhanes)
+md.pattern(df)
+```
+```{r}
+summ.df = summary(df[,17:34])
+```
+
+
+```{r}
+# multiple impute the missing values
+imp <- mice(df, m = 1, maxit = 5, seed = 1)
+# imp$imp$TEMPERATURE
+plot(imp)
+```
+
+```{r}
+summary(df[,17:34])
+imp.df = complete(imp, action="long")
+summ.imp = summary(imp.df[,17:34])
+summary(imp.df[,19:36])
+```
+
+```{r}
+# list of variables
+vars <- colnames(df[,c(17:29,31:34)])
+
+percs = c()
+
+# loop over variables to compare mean and median
+for (var in vars) {
+  mean_orig <- mean(df[[var]], na.rm = TRUE)
+  median_orig <- median(df[[var]], na.rm = TRUE)
+  
+  mean_imp <- mean(imp.df[[var]], na.rm = TRUE)
+  median_imp <- median(imp.df[[var]], na.rm = TRUE)
+  
+  mean_diff = mean_orig - mean_imp
+  median_diff = median_orig - median_imp
+  
+  mean_perc = 100*(mean_orig - mean_imp) / mean_orig
+  median_perc = 100*(median_orig - median_imp) / median_orig
+  
+  percs = append(percs, abs(mean_perc))
+  percs = append(percs, abs(median_perc))
+  
+  cat(paste("\nVariable: ", var,
+            "\nOriginal Mean: ", mean_orig, ", Imputed Mean: ", mean_imp, ", Mean Delta: ", mean_diff, ", Mean % Diff: ", mean_perc,
+            "\nOriginal Median: ", median_orig, ", Imputed Median: ", median_imp, ", Median Delta %: ", median_diff, ", Median % Diff:", median_perc, "\n"))
+}
+
+percs = na.omit(percs)
+# cat("\n", percs)
+percs.ave = sum(percs) / length(percs)
+cat("\nOVERALL AVERAGE PERCENTAGE DIFFERENCE: ", percs.ave)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+meth = imp$method
+meth["TEMPERATURE"] = "midastouch"
+imp2 <- mice(df, method = meth, m = 1, maxit = 5, seed = 1)
+plot(imp2)
+```
+```{r}
+summary(df[,17:34])
+imp2.df = complete(imp2, action="long")
+summary(imp2.df[,19:36])
+```
+```{r}
+# list of variables
+vars <- colnames(df[,c(17:29,31:34)])
+
+percs = c()
+
+# loop over variables to compare mean and median
+for (var in vars) {
+  mean_orig <- mean(df[[var]], na.rm = TRUE)
+  median_orig <- median(df[[var]], na.rm = TRUE)
+  
+  mean_imp <- mean(imp2.df[[var]], na.rm = TRUE)
+  median_imp <- median(imp2.df[[var]], na.rm = TRUE)
+  
+  mean_diff = mean_orig - mean_imp
+  median_diff = median_orig - median_imp
+  
+  mean_perc = 100*(mean_orig - mean_imp) / mean_orig
+  median_perc = 100*(median_orig - median_imp) / median_orig
+  
+  percs = append(percs, abs(mean_perc))
+  percs = append(percs, abs(median_perc))
+  
+  cat(paste("\nVariable: ", var,
+            "\nOriginal Mean: ", mean_orig, ", Imputed Mean: ", mean_imp, ", Mean Delta: ", mean_diff, ", Mean % Diff: ", mean_perc,
+            "\nOriginal Median: ", median_orig, ", Imputed Median: ", median_imp, ", Median Delta %: ", median_diff, ", Median % Diff:", median_perc, "\n"))
+}
+
+percs = na.omit(percs)
+# cat("\n", percs)
+percs.ave = sum(percs) / length(percs)
+cat("\nOVERALL AVERAGE PERCENTAGE DIFFERENCE: ", percs.ave)
+
+```
+```{r}
+write.csv(imp2.df, file="ImputedData.csv")
+```
+
+
+```{r}
+imp2 <- mice(df, method = "midastouch", m = 1, maxit = 1, seed = 1)
+plot(imp2)
+```
+
+```{r}
+# summary(df[,17:34])
+imp3.df = complete(imp2, action="long")
+# summary(imp2.df[,19:36])
+write.csv(imp3.df, file="WPMM_Data.csv")
+```
+
+```{r}
+plot(imp2)
+```
+
+
+```{r}
+# list of variables
+vars <- colnames(df[,c(17:29,31:34)])
+
+percs = c()
+
+# loop over variables to compare mean and median
+for (var in vars) {
+  mean_orig <- mean(df[[var]], na.rm = TRUE)
+  median_orig <- median(df[[var]], na.rm = TRUE)
+  
+  mean_imp <- mean(imp3.df[[var]], na.rm = TRUE)
+  median_imp <- median(imp3.df[[var]], na.rm = TRUE)
+  
+  mean_diff = mean_orig - mean_imp
+  median_diff = median_orig - median_imp
+  
+  mean_perc = 100*(mean_orig - mean_imp) / mean_orig
+  median_perc = 100*(median_orig - median_imp) / median_orig
+  
+  percs = append(percs, abs(mean_perc))
+  percs = append(percs, abs(median_perc))
+  
+  cat(paste("\nVariable: ", var,
+            "\nOriginal Mean: ", mean_orig, ", Imputed Mean: ", mean_imp, ", Mean Delta: ", mean_diff, ", Mean % Diff: ", mean_perc,
+            "\nOriginal Median: ", median_orig, ", Imputed Median: ", median_imp, ", Median Delta %: ", median_diff, ", Median % Diff:", median_perc, "\n"))
+}
+
+percs = na.omit(percs)
+# cat("\n", percs)
+percs.ave = sum(percs) / length(percs)
+cat("\nOVERALL AVERAGE PERCENTAGE DIFFERENCE: ", percs.ave)
+
+```
